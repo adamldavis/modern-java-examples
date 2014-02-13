@@ -35,5 +35,17 @@
 			<version>4.8.1</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>com.googlecode.totallylazy</groupId>
+			<artifactId>totallylazy</artifactId>
+			<version>1171</version>
+		</dependency>
 	</dependencies>
+	<repositories>
+		<repository>
+			<id>bodar</id>
+			<name>Repository for totallylazy</name>
+			<url>http://repo.bodar.com/</url>
+		</repository>
+	</repositories>
 </project>

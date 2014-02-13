@@ -1,6 +1,6 @@
 package com.adamldavis.java.example;
 
-import static org.bitbucket.dollar.lang.Maybe.maybe;
+import static com.googlecode.totallylazy.Option.some;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -15,13 +15,13 @@ import org.junit.Before;
 import org.junit.Test;
 
 
-public class SchoolTest {
+public class TotallyLazySchoolTest {
 
-	School school;
+	TotallyLazySchool school;
 
 	@Before
 	public void setupSchool() throws MissingDataException {
-		school = new School();
+		school = new TotallyLazySchool();
 		school.addStudent("John", "Doe", "PREMED");
 		school.addStudent("Jane", "Doe", StudentType.PRELAW, 4.0);
 		school.addStudent("Ruff", "Grade", StudentType.LIBERAL_ARTS, 2.2);
@@ -58,38 +58,37 @@ public class SchoolTest {
 
 	@Test
 	public void testFindStudent() {
-		assertThat(school.findStudent("John", "Doe").isKnown(), is(true));
+		assertThat(school.findStudent("John", "Doe").isDefined(), is(true));
 	}
 
 	@Test
 	public void testRemoveStudent() {
-		assumeThat(school.findStudent("John", "Doe").isKnown(), is(true));
+		assumeThat(school.findStudent("John", "Doe").isDefined(), is(true));
 		school.removeStudent("John", "Doe");
-		assertThat(school.findStudent("John", "Doe").isKnown(), is(false));
+		assertThat(school.findStudent("John", "Doe").isDefined(), is(false));
 	}
 
 	@Test
 	public void testUpdateStudentGpa() throws MissingDataException {
 		school.updateStudentGpa("Jane", "Doe", 3.8);
 		assertThat(
-				school.findStudent("Jane", "Doe").otherwiseThrow(
-						NullPointerException.class).gpa.otherwise(0d),
+				school.findStudent("Jane", "Doe").get().gpa.otherwise(0d),
 				equalTo(3.8));
 	}
 
 	@Test
 	public void testGetHighestGPA() {
-		assertThat(school.getHighestGPA(), equalTo(maybe(4.0)));
+		assertThat(school.getHighestGPA(), equalTo(some(4.0)));
 	}
 
 	@Test
 	public void testGetLowestGPA() {
-		assertThat(school.getLowestGPA(), equalTo(maybe(2.2)));
+		assertThat(school.getLowestGPA(), equalTo(some(2.2)));
 	}
 
 	@Test
 	public void testGetAverageGPA() {
-		assertThat(school.getAverageGPA(), equalTo(maybe(3.31667)));
+		assertThat(school.getAverageGPA(), equalTo(some(3.31667)));
 	}
 
 	@Test

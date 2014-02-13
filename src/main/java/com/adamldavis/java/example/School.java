@@ -20,7 +20,6 @@ import static org.bitbucket.dollar.lang.Maybe.definitely;
 import static org.bitbucket.dollar.lang.Maybe.maybe;
 import static org.bitbucket.dollar.lang.Maybe.nothing;
 import static org.bitbucket.dollar.lang.Maybe.theAbsenceOfA;
-import static org.bitbucket.dollar.lang.ObjectUtil.equal;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -28,74 +27,23 @@ import java.util.LinkedHashSet;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import org.bitbucket.dollar.Dollar.Wrapper;
 import org.bitbucket.dollar.functions.BiFunction;
 import org.bitbucket.dollar.functions.Function;
 import org.bitbucket.dollar.functions.Predicate;
 import org.bitbucket.dollar.lang.Maybe;
-import org.bitbucket.dollar.lang.ObjectUtil;
 
 /**
  * Modern Java: Example of School with students in memory. This example is meant
  * to introduce some functional concepts. Although this example use the dollar
  * and dollar-lang libraries, very similar things can be done with either Guava,
- * Functional Java, or (when it comes out) Java 8.
+ * Functional Java, totallylazy, or (when it comes out) Java 8.
+ * 
+ * This demonstrates use of Functions, Predicates, and Maybe pre-Java8.
  * 
  * @author Adam L. Davis
  */
 public class School {
-
-	public static class Student {
-		public Student(String firstName, String lastName,
-				StudentType studentType, Maybe<Double> gpa) {
-			super();
-			this.firstName = firstName;
-			this.lastName = lastName;
-			this.studentType = studentType;
-			this.gpa = gpa;
-		}
-
-		public final String firstName;
-		public final String lastName;
-		public final StudentType studentType;
-		public final Maybe<Double> gpa;
-
-		@Override
-		public int hashCode() {
-			return ObjectUtil.hashCode(firstName, lastName, studentType, gpa);
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj)
-				return true;
-			if (obj == null)
-				return false;
-			if (getClass() != obj.getClass())
-				return false;
-			Student other = (Student) obj;
-			return equal(firstName, other.firstName)
-					&& equal(lastName, other.lastName)
-					&& equal(studentType, other.studentType)
-					&& equal(gpa, other.gpa);
-		}
-
-	}
-
-	public enum StudentType {
-		PREMED, PRELAW, SCIENCE, LIBERAL_ARTS;
-	}
-
-	@SuppressWarnings("serial")
-	public static class MissingDataException extends Exception {
-
-		public MissingDataException() {
-			super();
-		}
-
-		public MissingDataException(String message) {
-			super(message);
-		}
-	}
 
 	private final Set<Student> students = new LinkedHashSet<>();
 
@@ -209,18 +157,20 @@ public class School {
 			return nothing();
 		}
 		// filter/map/reduce
-		final BigDecimal sum = $(students)
-				.filter(studentHasGpa())
-				.map(studentToGpa())
-				.reduce(BigDecimal.ZERO,
-						new BiFunction<Maybe<Double>, BigDecimal, BigDecimal>() {
-							public BigDecimal apply(Maybe<Double> maybeGPA,
-									BigDecimal sum) {
-								final double gpa = maybeGPA.otherwise(0d);
-								return sum.add(new BigDecimal(gpa));
-							}
-						});
-		return definitely(sum.divide(new BigDecimal(students.size()), 5,
+		final Wrapper<Student> studentsWithGpa = $(students).filter(
+				studentHasGpa());
+		final BigDecimal sum = studentsWithGpa.map(studentToGpa()).reduce(
+				BigDecimal.ZERO,
+				new BiFunction<Maybe<Double>, BigDecimal, BigDecimal>() {
+					public BigDecimal apply(Maybe<Double> maybeGPA,
+							BigDecimal sum) {
+						final double gpa = maybeGPA.otherwise(0d);
+						return sum.add(new BigDecimal(gpa));
+					}
+				});
+		final int count = studentsWithGpa.size();
+
+		return definitely(sum.divide(new BigDecimal(count), 5,
 				RoundingMode.HALF_UP).doubleValue());
 	}
 
@@ -259,7 +209,7 @@ public class School {
 	}
 
 	private Function<Student, Maybe<Double>> studentToGpa() {
-		return new Function<School.Student, Maybe<Double>>() {
+		return new Function<Student, Maybe<Double>>() {
 			public Maybe<Double> apply(Student s) {
 				return s.gpa;
 			}
